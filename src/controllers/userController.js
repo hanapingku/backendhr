@@ -195,11 +195,44 @@ exports.getRiwayatUjian = async (req, res) => {
   }
 };
 
-// DOWNLOAD materi (otomatis)
+// DOWNLOAD materi - dengan token dari query parameter
 exports.downloadMateri = async (req, res) => {
   try {
     const { materiId } = req.params;
+    const token = req.query.token || req.headers.authorization?.replace('Bearer ', '');
 
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token tidak ditemukan'
+      });
+    }
+
+    // Verifikasi token
+    const jwt = require('jsonwebtoken');
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token tidak valid atau expired'
+      });
+    }
+
+    // Cek user
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id }
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User tidak ditemukan'
+      });
+    }
+
+    // Ambil materi
     const materi = await prisma.materi.findUnique({
       where: { id: materiId },
       include: {
@@ -215,16 +248,19 @@ exports.downloadMateri = async (req, res) => {
     }
 
     // Path file
+    const path = require('path');
     const filePath = path.join(__dirname, '../../', materi.file_path);
     
     // Download file
     res.download(filePath, `${materi.judul}.pdf`, (err) => {
       if (err) {
         console.error('Download error:', err);
-        res.status(500).json({
-          success: false,
-          message: 'Gagal mendownload file'
-        });
+        if (!res.headersSent) {
+          res.status(500).json({
+            success: false,
+            message: 'Gagal mendownload file'
+          });
+        }
       }
     });
 

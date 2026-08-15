@@ -8,17 +8,14 @@ const {
 } = require('../controllers/userController');
 const { authMiddleware } = require('../middleware/auth');
 
-// Semua route harus login
-router.use(authMiddleware);
-
 // Dashboard & Bidang
-router.get('/dashboard', getDashboardUser);
-router.get('/bidang/:bidangId', getDetailBidang);
+router.get('/dashboard', authMiddleware, getDashboardUser);
+router.get('/bidang/:bidangId', authMiddleware, getDetailBidang);
 
 // Riwayat
-router.get('/riwayat', getRiwayatUjian);
+router.get('/riwayat', authMiddleware, getRiwayatUjian);
 
-// Download Materi
+// Download Materi - tanpa authMiddleware (pakai token dari query)
 router.get('/materi/:materiId/download', downloadMateri);
 
 module.exports = router;

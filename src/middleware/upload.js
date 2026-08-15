@@ -31,12 +31,30 @@ const storage = multer.diskStorage({
   }
 });
 
-// File filter - hanya PDF
+// File filter - sesuaikan dengan fieldname
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'application/pdf') {
-    cb(null, true);
-  } else {
-    cb(new Error('Hanya file PDF yang diperbolehkan!'), false);
+  // Jika upload materi → hanya PDF
+  if (file.fieldname === 'materi') {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Hanya file PDF yang diperbolehkan untuk materi!'), false);
+    }
+  }
+  // Jika upload soal → hanya Excel
+  else if (file.fieldname === 'soal') {
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel' // .xls
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Hanya file Excel (.xlsx atau .xls) yang diperbolehkan untuk soal!'), false);
+    }
+  }
+  else {
+    cb(new Error('Field tidak dikenal'), false);
   }
 };
 
