@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique @db.VarChar(255)
+  password_hash   String   @db.VarChar(255)
+  full_name       String   @db.VarChar(255)
+  role            Role     @default(user)
+  created_at      DateTime @default(now())
+  
+  ujian           Ujian[]
+  bidang_created  Bidang[] @relation("BidangCreator")
+  
+  @@map("users")
+}
+
+model Bidang {
+  id              String   @id @default(uuid())
+  nama            String   @db.VarChar(255)
+  deskripsi       String?  @db.Text
+  durasi_ujian    Int      // dalam menit
+  created_by      String   @db.VarChar(255)
+  created_at      DateTime @default(now())
+  
+  creator         User     @relation("BidangCreator", fields: [created_by], references: [id])
+  materi          Materi[]
+  soal            Soal[]
+  ujian           Ujian[]
+  
+  @@map("bidang")
+}
+
+model Materi {
+  id              String   @id @default(uuid())
+  bidang_id       String
+  judul           String   @db.VarChar(255)
+  file_path       String   @db.VarChar(500)
+  uploaded_at     DateTime @default(now())
+  
+  bidang          Bidang   @relation(fields: [bidang_id], references: [id], onDelete: Cascade)
+  
+  @@map("materi")
+}
+
+model Soal {
+  id              String   @id @default(uuid())
+  bidang_id       String
+  soal_text       String   @db.Text
+  pilihan_a       String   @db.VarChar(500)
+  pilihan_b       String   @db.VarChar(500)
+  pilihan_c       String   @db.VarChar(500)
+  pilihan_d       String   @db.VarChar(500)
+  pilihan_e       String   @db.VarChar(500)
+  jawaban_benar   String   @db.Char(1)
+  created_at      DateTime @default(now())
+  
+  bidang          Bidang   @relation(fields: [bidang_id], references: [id], onDelete: Cascade)
+  
+  @@map("soal")
+}
+
+model Ujian {
+  id                 String        @id @default(uuid())
+  user_id            String
+  bidang_id          String
+  waktu_mulai        DateTime?
+  waktu_selesai      DateTime?
+  skor               Int           @default(0)
+  percobaan_ke       Int           @default(1)
+  status             StatusUjian   @default(belum_mulai)
+  is_paused_by_admin Boolean       @default(false)
+  created_at         DateTime      @default(now())
+  
+  user               User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  bidang             Bidang        @relation(fields: [bidang_id], references: [id], onDelete: Cascade)
+  log_pindah_tab     LogPindahTab[]
+  
+  @@unique([user_id, bidang_id, percobaan_ke])
+  @@map("ujian")
+}
+
+model LogPindahTab {
+  id              String   @id @default(uuid())
+  ujian_id        String
+  action          String   @db.VarChar(50) // 'pause' atau 'resume'
+  timestamp       DateTime @default(now())
+  
+  ujian           Ujian    @relation(fields: [ujian_id], references: [id], onDelete: Cascade)
+  
+  @@map("log_pindah_tab")
+}
+
+enum Role {
+  admin
+  user
+}
+
+enum StatusUjian {
+  belum_mulai
+  sedang_berlangsung
+  di_pause
+  selesai
+}
