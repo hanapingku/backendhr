@@ -5,7 +5,8 @@ const {
   mulaiUjian,
   submitUjian,
   pauseUjian,
-  resumeUjian
+  resumeUjian,
+  getUjianDiPause  // 🔥 Tambahkan ini
 } = require('../controllers/ujianController');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 
@@ -24,5 +25,8 @@ router.put('/:ujianId/pause', pauseUjian);
 
 // Resume (dari admin)
 router.put('/:ujianId/resume', adminMiddleware, resumeUjian);
+
+// 🔥 GET semua ujian yang di-pause (untuk admin)
+router.get('/di-pause', adminMiddleware, getUjianDiPause);
 
 module.exports = router;

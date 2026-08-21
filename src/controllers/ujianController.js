@@ -359,3 +359,44 @@ exports.resumeUjian = async (req, res) => {
     });
   }
 };
+
+// GET semua ujian yang di-pause (untuk admin)
+exports.getUjianDiPause = async (req, res) => {
+  try {
+    const ujianDiPause = await prisma.ujian.findMany({
+      where: {
+        status: 'di_pause'
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            full_name: true,
+            email: true
+          }
+        },
+        bidang: {
+          select: {
+            id: true,
+            nama: true
+          }
+        }
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: ujianDiPause
+    });
+
+  } catch (error) {
+    console.error('Get ujian di-pause error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Terjadi kesalahan saat mengambil data ujian di-pause'
+    });
+  }
+};
