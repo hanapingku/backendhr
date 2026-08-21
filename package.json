@@ -5,16 +5,12 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "start": "node src/server-simple.js",
     "dev": "nodemon src/server.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
-    "prisma:seed": "node prisma/seed.js",
-    "postinstall": "npx prisma generate --schema=./prisma/schema.prisma"
+    "postinstall": "node_modules/.bin/prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@prisma/config": "^7.8.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

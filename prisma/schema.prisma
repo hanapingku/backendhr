@@ -26,7 +26,7 @@ model Bidang {
   id              String   @id @default(uuid())
   nama            String   @db.VarChar(255)
   deskripsi       String?  @db.Text
-  durasi_ujian    Int      // dalam menit
+  durasi_ujian    Int
   created_by      String   @db.VarChar(255)
   created_at      DateTime @default(now())
   
@@ -83,14 +83,13 @@ model Ujian {
   bidang             Bidang        @relation(fields: [bidang_id], references: [id], onDelete: Cascade)
   log_pindah_tab     LogPindahTab[]
   
-  @@unique([user_id, bidang_id, percobaan_ke])
   @@map("ujian")
 }
 
 model LogPindahTab {
   id              String   @id @default(uuid())
   ujian_id        String
-  action          String   @db.VarChar(50) // 'pause' atau 'resume'
+  action          String   @db.VarChar(50)
   timestamp       DateTime @default(now())
   
   ujian           Ujian    @relation(fields: [ujian_id], references: [id], onDelete: Cascade)

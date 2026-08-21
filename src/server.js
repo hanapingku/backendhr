@@ -8,7 +8,7 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 
-// ============ CORS (Panggil SEKALI di awal) ============
+// ============ CORS ============
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -25,13 +25,13 @@ const authRoutes = require('./routes/authRoutes');
 const bidangRoutes = require('./routes/bidangRoutes');
 const ujianRoutes = require('./routes/ujianRoutes');
 const hasilRoutes = require('./routes/hasilRoutes');
-const userRoutes = require('./routes/userRoutes'); // 🔥 Pindahkan ke sini!
+const userRoutes = require('./routes/userRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/bidang', bidangRoutes);
 app.use('/api/ujian', ujianRoutes);
 app.use('/api/hasil', hasilRoutes);
-app.use('/api/user', userRoutes); // 🔥 Tambahkan ini!
+app.use('/api/user', userRoutes);
 
 // ============ HEALTH CHECK ============
 app.get('/api/health', (req, res) => {
@@ -40,7 +40,7 @@ app.get('/api/health', (req, res) => {
 
 // ============ ERROR HANDLER ============
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('❌ Error:', err.stack);
   res.status(500).json({
     success: false,
     message: err.message || 'Internal Server Error'
@@ -63,26 +63,25 @@ io.on('connection', (socket) => {
 
   socket.on('register-user', (userId) => {
     userSockets.set(userId, socket.id);
-    console.log(`✅ User ${userId} registered with socket ${socket.id}`);
+    console.log(`✅ User ${userId} registered`);
   });
 
-  socket.on('ujian-pause', async (data) => {
+  socket.on('ujian-pause', (data) => {
     const { ujianId, userId, bidangId } = data;
     console.log(`⏸️ User ${userId} paused ujian ${ujianId}`);
     ujianPaused.set(ujianId, { userId, bidangId, timestamp: new Date() });
-    io.emit('notifikasi-pause', { ujianId, userId, bidangId, message: `User ${userId} mempause ujian`, timestamp: new Date() });
-    socket.emit('ujian-paused', { success: true, message: 'Ujian dipause karena pindah tab' });
+    io.emit('notifikasi-pause', { ujianId, userId, bidangId });
+    socket.emit('ujian-paused', { success: true });
   });
 
-  socket.on('ujian-resume', async (data) => {
+  socket.on('ujian-resume', (data) => {
     const { ujianId, userId } = data;
-    console.log(`▶️ Admin resume ujian ${ujianId} for user ${userId}`);
+    console.log(`▶️ Admin resume ujian ${ujianId}`);
     ujianPaused.delete(ujianId);
     const userSocketId = userSockets.get(userId);
     if (userSocketId) {
-      io.to(userSocketId).emit('ujian-resumed', { success: true, ujianId, message: 'Admin mengizinkan Anda melanjutkan ujian' });
+      io.to(userSocketId).emit('ujian-resumed', { success: true, ujianId });
     }
-    socket.emit('notifikasi-resume', { ujianId, userId, message: `Ujian user ${userId} telah dilanjutkan`, timestamp: new Date() });
   });
 
   socket.on('disconnect', () => {
