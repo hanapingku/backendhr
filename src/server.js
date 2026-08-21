@@ -148,4 +148,8 @@ module.exports = { io, userSockets, ujianPaused };
 
 // Tambahkan setelah routes lainnya
 const userRoutes = require('./routes/userRoutes');
-app.use('/api/user', userRoutes);
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
